@@ -1,0 +1,13 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env.*.local
+*.pem
+npm-debug.log*
+.DS_Store
+tsconfig.tsbuildinfo
+
+# Nested sibling repo (pushed separately)
+wewin-ielts/

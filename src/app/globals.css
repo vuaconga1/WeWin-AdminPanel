@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+:root {
+  --wewin-navy: #0d1b3e;
+  --wewin-navy-hover: #0a1530;
+  --wewin-gold: #d4af37;
+  --wewin-gold-soft: #e8d48b;
+  --wewin-bg: #f3f5f8;
+  --wewin-white: #ffffff;
+  --wewin-border: #e5e7eb;
+  --wewin-accent-blue: #2d74da;
+  --wewin-accent-blue-bg: #e6f0ff;
+  --wewin-sidebar-width: 260px;
+  --wewin-sidebar-collapsed-width: 68px;
+  --background: var(--wewin-bg);
+  --foreground: #18181b;
+}
+
+@theme inline {
+  --color-wewin-navy: var(--wewin-navy);
+  --color-wewin-navy-hover: var(--wewin-navy-hover);
+  --color-wewin-gold: var(--wewin-gold);
+  --color-wewin-gold-soft: var(--wewin-gold-soft);
+  --color-wewin-bg: var(--wewin-bg);
+  --color-wewin-white: var(--wewin-white);
+  --color-wewin-border: var(--wewin-border);
+  --color-wewin-accent-blue: var(--wewin-accent-blue);
+  --color-wewin-accent-blue-bg: var(--wewin-accent-blue-bg);
+  --font-sans: var(--font-manrope);
+}
+
+body {
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgb(212 175 55 / 0.12), transparent 55%),
+    radial-gradient(900px 420px at 90% 0%, rgb(45 116 218 / 0.12), transparent 50%),
+    linear-gradient(160deg, #e8eefc 0%, var(--wewin-bg) 45%, #eef1f7 100%);
+  color: var(--foreground);
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.wewin-site-header {
+  height: 4rem;
+}
+
+.wewin-sidebar-rail {
+  width: var(--wewin-sidebar-width);
+  transition: width 250ms ease;
+}
+
+.wewin-sidebar-rail[data-collapsed="true"] {
+  width: var(--wewin-sidebar-collapsed-width);
+}
+
+.wewin-sidebar-surface {
+  border-right: 1px solid rgb(255 255 255 / 0.7);
+  background:
+    radial-gradient(120% 40% at 0% 100%, rgb(212 175 55 / 0.14), transparent 70%),
+    linear-gradient(
+      180deg,
+      rgb(255 255 255 / 0.88) 0%,
+      rgb(236 241 255 / 0.85) 45%,
+      rgb(214 223 249 / 0.88) 100%
+    );
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  box-shadow:
+    inset -1px 0 0 rgb(37 64 160 / 0.08),
+    4px 0 24px rgb(13 27 62 / 0.06);
+}
+
+.wewin-nav-active {
+  background: linear-gradient(120deg, #0a1530 0%, #1a2b55 55%, #b8902f 100%);
+  box-shadow:
+    0 4px 12px rgb(26 43 85 / 0.3),
+    inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
