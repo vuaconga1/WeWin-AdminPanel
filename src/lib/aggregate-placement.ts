@@ -1,6 +1,8 @@
 import { Prisma, type PlacementBranch } from "@prisma/client";
+import { cookies } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { COOKIE_NAME } from "@/lib/session";
 
 export type HubBranch = "NTL" | "XVNT";
 export type AggregatedPlacementSource = "ielts" | "cambridge";
@@ -132,17 +134,29 @@ type RemoteList = {
   items?: Array<Omit<HubPlacementItem, "source"> & { source?: string }>;
 };
 
+function isLocalHubHost(hubUrl: string): boolean {
+  try {
+    const host = new URL(hubUrl).hostname;
+    return host === "localhost" || host === "127.0.0.1";
+  } catch {
+    return false;
+  }
+}
+
 async function fetchRemoteHub(
   sourceId: AggregatedPlacementSource,
   hubUrl: string,
   publicOrigin: string,
   query: PlacementQuery,
+  opts?: { sessionToken?: string | null },
 ): Promise<{
   items: HubPlacementItem[];
   status: { ok: boolean; error?: string };
 }> {
   const key = hubKey();
-  if (!key) {
+  const sessionToken = opts?.sessionToken?.trim() || null;
+  // IELTS Phase 1: wewin_session cookie. Cambridge (and later IELTS): Bearer.
+  if (!key && !sessionToken) {
     return {
       items: [],
       status: { ok: false, error: "HUB_KEY_NOT_CONFIGURED" },
@@ -154,15 +168,16 @@ async function fetchRemoteHub(
   if (query.branch) url.searchParams.set("branch", query.branch);
   if (query.take) url.searchParams.set("take", String(query.take));
 
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (key) headers.Authorization = `Bearer ${key}`;
+  if (sessionToken) headers.Cookie = `${COOKIE_NAME}=${sessionToken}`;
+
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch(url.toString(), {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${key}`,
-        Accept: "application/json",
-      },
+      headers,
       cache: "no-store",
       signal: controller.signal,
     });
@@ -179,14 +194,25 @@ async function fetchRemoteHub(
       };
     }
     const data = (await res.json()) as RemoteList;
-    const items = (data.items ?? []).map((row) => ({
-      ...row,
-      source: sourceId,
-      detailUrl: absolutizeDetailUrl(row.detailUrl, publicOrigin, {
-        slug: row.testSlug,
-        id: row.id,
-      }),
-    }));
+    const items = (data.items ?? []).map((row) => {
+      // Cambridge staff UI is cookie-gated — open via Admin Panel SSO bridge
+      // so operators only sign in once on Admin Panel.
+      if (sourceId === "cambridge") {
+        return {
+          ...row,
+          source: sourceId,
+          detailUrl: `/api/cambridge-sso?attempt=${encodeURIComponent(row.id)}`,
+        };
+      }
+      return {
+        ...row,
+        source: sourceId,
+        detailUrl: absolutizeDetailUrl(row.detailUrl, publicOrigin, {
+          slug: row.testSlug,
+          id: row.id,
+        }),
+      };
+    });
     return { items, status: { ok: true } };
   } catch (error) {
     const aborted = error instanceof Error && error.name === "AbortError";
@@ -259,7 +285,8 @@ async function listLocalPlacement(
 
 /**
  * AdminPanel BFF — same contract as wewin-ielts HubPanel:
- * remote IELTS + Cambridge hubs via Bearer; fall back to local DB per source.
+ * IELTS via forwarded wewin_session (+ optional Bearer); Cambridge via Bearer.
+ * Local DB fallback only for localhost hubs (never mask production with seed data).
  */
 export async function aggregatePlacement(
   query: PlacementQuery,
@@ -268,6 +295,8 @@ export async function aggregatePlacement(
   const sourceFilter = query.source;
   const loadIelts = sourceFilter !== "cambridge";
   const loadCambridge = sourceFilter !== "ielts";
+  const jar = await cookies();
+  const sessionToken = jar.get(COOKIE_NAME)?.value ?? null;
 
   const sources: AggregatedPlacement["sources"] = {
     ielts: { ok: false },
@@ -277,16 +306,18 @@ export async function aggregatePlacement(
   const items: HubPlacementItem[] = [];
 
   if (loadIelts) {
+    const hubUrl = ieltsHubUrl();
     const remote = await fetchRemoteHub(
       "ielts",
-      ieltsHubUrl(),
+      hubUrl,
       ieltsPublicOrigin(),
       query,
+      { sessionToken },
     );
     if (remote.status.ok) {
       sources.ielts = { ok: true };
       items.push(...remote.items);
-    } else {
+    } else if (isLocalHubHost(hubUrl)) {
       try {
         const local = await listLocalPlacement(query, "ielts");
         sources.ielts = {
@@ -300,6 +331,11 @@ export async function aggregatePlacement(
           error: remote.status.error || "IELTS_HUB_FAILED",
         };
       }
+    } else {
+      sources.ielts = {
+        ok: false,
+        error: remote.status.error || "IELTS_HUB_FAILED",
+      };
     }
   } else {
     sources.ielts = { ok: true };
@@ -324,11 +360,12 @@ export async function aggregatePlacement(
         cambridgeUrl,
         cambridgePublicOrigin(cambridgeUrl),
         query,
+        { sessionToken },
       );
       if (remote.status.ok) {
         sources.cambridge = { ok: true };
         items.push(...remote.items);
-      } else {
+      } else if (isLocalHubHost(cambridgeUrl)) {
         try {
           const local = await listLocalPlacement(query, "cambridge");
           sources.cambridge = {
@@ -342,6 +379,11 @@ export async function aggregatePlacement(
             error: remote.status.error || "CAMBRIDGE_HUB_FAILED",
           };
         }
+      } else {
+        sources.cambridge = {
+          ok: false,
+          error: remote.status.error || "CAMBRIDGE_HUB_FAILED",
+        };
       }
     }
   } else {

@@ -84,6 +84,11 @@ export function PlacementPanel({
         return;
       }
       setData(body);
+      if (source === "cambridge" && body.sources?.cambridge && !body.sources.cambridge.ok) {
+        setError(body.sources.cambridge.error || "CAMBRIDGE_HUB_FAILED");
+      } else if (source === "ielts" && body.sources?.ielts && !body.sources.ielts.ok) {
+        setError(body.sources.ielts.error || "IELTS_HUB_FAILED");
+      }
     } catch {
       setError("FETCH_FAILED");
       setData(null);
@@ -151,7 +156,34 @@ export function PlacementPanel({
 
       {error ? (
         <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-          {error}
+          {(() => {
+            const label =
+              source === "cambridge"
+                ? "Cambridge"
+                : source === "ielts"
+                  ? "IELTS"
+                  : "Placement";
+            if (
+              error === "CAMBRIDGE_HUB_NOT_CONFIGURED" ||
+              error === "HUB_KEY_NOT_CONFIGURED"
+            ) {
+              return `Chưa cấu hình hub ${label} / WEWIN_HUB_API_KEY.`;
+            }
+            if (
+              error === "UNAUTHORIZED" ||
+              error === "HTTP_401" ||
+              error === "ADMIN_REQUIRED"
+            ) {
+              return `${label} từ chối key (kiểm tra WEWIN_HUB_API_KEY).`;
+            }
+            if (error === "HTTP_404") {
+              return `Hub ${label} chưa deploy.`;
+            }
+            if (error === "TIMEOUT") {
+              return `Hết thời gian chờ khi gọi hub ${label}.`;
+            }
+            return `Không lấy được dữ liệu ${label} (${error}).`;
+          })()}
         </p>
       ) : null}
 

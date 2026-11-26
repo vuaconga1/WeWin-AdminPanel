@@ -11,3 +11,6 @@ tsconfig.tsbuildinfo
 
 # Nested sibling repo (pushed separately)
 wewin-ielts/
+WeWIN-VSTEP/
+.vercel
+.env*
