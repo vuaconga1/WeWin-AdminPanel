@@ -5,3 +5,6 @@ wewin-ielts
 node_modules
 *.md
 docs
+.env
+.env.*
+!.env.example
