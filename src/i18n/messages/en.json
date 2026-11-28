@@ -24,5 +24,7 @@
   "statsTotal": "Total attempts",
   "statsNtl": "NTL attempts",
   "statsXvnt": "XVNT attempts",
-  "loading": "Loading…"
+  "loading": "Loading…",
+  "tabHistory": "Attempt history",
+  "tabMainSite": "Main site"
 }

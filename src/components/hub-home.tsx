@@ -11,13 +11,14 @@ import {
   Headphones,
   MessageSquare,
   Monitor,
+  TrendingUp,
 } from "lucide-react";
 import { FastbotsChats } from "@/components/fastbots-chats";
 import type { AggregatedPlacement } from "@/lib/aggregate-placement";
 
 type BranchFilter = "" | "NTL" | "XVNT";
 type SourceTab = "ielts" | "cambridge";
-type HubSection = "placement" | "chats";
+type HubSection = "placement" | "chats" | "sale-pipeline";
 
 const PLATFORMS = [
   {
@@ -178,15 +179,24 @@ export function HubHome() {
         <h1 className="mt-2 max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl">
           {section === "chats"
             ? "Chat History · Fastbots"
-            : "Kết quả Placement Test"}
+            : section === "sale-pipeline"
+              ? "Sale Pipeline"
+              : "Kết quả Placement Test"}
         </h1>
         <p className="mt-2 max-w-xl text-sm text-white/80">
           {section === "chats"
             ? "Xem hội thoại chatbot tư vấn (đồng bộ webhook). Chi tiết đầy đủ vẫn trên Fastbots."
-            : "Tra cứu bài kiểm tra đầu vào từ IELTS và Cambridge. Chi tiết mở trên web gốc."}
+            : section === "sale-pipeline"
+              ? "Tổng quan doanh thu và lead theo cơ sở NTL & XVNT. Mặc định mở Tổng quan."
+              : "Tra cứu bài kiểm tra đầu vào từ IELTS và Cambridge. Chi tiết mở trên web gốc."}
         </p>
         {section === "chats" ? (
           <MessageSquare
+            className="pointer-events-none absolute right-8 top-1/2 hidden h-16 w-16 -translate-y-1/2 text-wewin-gold/40 sm:block"
+            aria-hidden
+          />
+        ) : section === "sale-pipeline" ? (
+          <TrendingUp
             className="pointer-events-none absolute right-8 top-1/2 hidden h-16 w-16 -translate-y-1/2 text-wewin-gold/40 sm:block"
             aria-hidden
           />
@@ -215,6 +225,11 @@ export function HubHome() {
               label: "Chat History",
               Icon: MessageSquare,
             },
+            {
+              id: "sale-pipeline" as const,
+              label: "Sale Pipeline",
+              Icon: TrendingUp,
+            },
           ] as const
         ).map((tab) => {
           const active = section === tab.id;
@@ -239,6 +254,21 @@ export function HubHome() {
       </div>
 
       {section === "chats" ? <FastbotsChats hideHero /> : null}
+
+      {section === "sale-pipeline" ? (
+        <section className="overflow-hidden rounded-xl border border-wewin-border bg-white shadow-sm">
+          <iframe
+            title="Sale Pipeline WeWIN"
+            src="/admin/sale-pipeline/view"
+            referrerPolicy="no-referrer"
+            className="block w-full border-0"
+            style={{
+              height: "calc(100dvh - 220px)",
+              minHeight: 520,
+            }}
+          />
+        </section>
+      ) : null}
 
       {section === "placement" ? (
         <>

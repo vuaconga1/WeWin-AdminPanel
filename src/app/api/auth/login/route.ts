@@ -8,7 +8,8 @@ import { isAdminRole } from "@/lib/session";
 export const runtime = "nodejs";
 
 /**
- * Local admin login against AdminPanel PostgreSQL (independent of IELTS).
+ * Admin login against AdminPanel PostgreSQL.
+ * Issues wewin_session (same secret/Domain as sibling WeWIN apps).
  */
 export async function POST(request: Request) {
   const raw = await request.json().catch(() => null);

@@ -1,50 +1,71 @@
-# WeWIN SSO (shared session)
+# WeWIN SSO
 
-Phase 1: **IELTS is the IdP**. One `wewin_session` cookie unlocks AdminPanel and sibling apps that share the same secret.
+## Admin Panel login
 
-## How it works
+Admin Panel uses a local login form against its own Postgres `AdminUser` table.
+Successful login sets `wewin_session` (HMAC-SHA256, same shape as IELTS).
+
+Cookie flags: `HttpOnly`, `SameSite=Lax`, `Secure` (prod / when Domain set), `Path=/`, `Max-Age=14d`.
+
+| Variable | Notes |
+|----------|--------|
+| `SESSION_SECRET` | ≥16 chars; match IELTS / Chinese if they verify the same cookie |
+| `SESSION_COOKIE_DOMAIN` | Production: `.wewin.edu.vn`. Omit on localhost |
+| `WEWIN_HUB_API_KEY` | ≥16 chars; **must match** every product hub + embed SSO consume |
+
+## Embed SSO (iframe «Trang chính» → product admin)
+
+Product apps do **not** share one cookie format. Admin Panel mints a short-lived
+token and each product sets its **native** admin session.
 
 ```
-Browser opens admin.wewin.edu.vn
-  → no ADMIN wewin_session
-  → 302 IELTS /login?return_to=https://admin.wewin.edu.vn/...
-  → login against IELTS user store
-  → Set-Cookie wewin_session; Domain=.wewin.edu.vn
-  → 302 back to return_to
-  → AdminPanel + ielts.* + other *.wewin.edu.vn receive the same cookie
+Admin /p/{product} → tab Trang chính
+  → iframe src=/api/sso/embed?product=ielts&embed=1
+  → require ADMIN wewin_session
+  → mint token (HMAC WEWIN_HUB_API_KEY, TTL ~90s)
+  → 302 {productOrigin}/api/hub/embed-sso-consume?token=…&product=…&embed=1
+  → product sets its own admin cookie
+  → 302 product admin path
 ```
 
-Cookie: `wewin_session` = `base64url(JSON).HMAC-SHA256`  
-Flags: `HttpOnly`, `SameSite=Lax`, `Secure` (prod / when Domain set), `Path=/`, `Max-Age=14d`
+| Product | Consume | Native session | Landing |
+|---------|---------|----------------|---------|
+| IELTS | `/api/hub/embed-sso-consume` | `wewin_session` HMAC ADMIN | `/admin` |
+| Cambridge | `/api/hub/embed-sso-consume` | `wewin_admin` (Partitioned when `embed=1`) | `/admin` |
+| Exam | `/api/hub/embed-sso-consume` | DB hex `wewin_session` | `/?screen=staff` |
+| TOEIC | `/api/hub/embed-sso-consume` | NextAuth `wewin-toeic.session-token` | `/manage/toeic` |
+| DailyTalk | `/api/hub/embed-sso-consume` | `ww_session` (DB user ADMIN) | `/admin` |
+| Chinese | `/api/hub/embed-sso-consume` | `wewin_zh_session` HMAC ADMIN | `/admin` |
+| VSTEP | *(pending — no local consume yet)* | — | `/manage/vstep` |
 
-## Env (must match across apps)
+«Mở tab mới» uses the same bridge with `embed=0` (top-level; Cambridge uses Lax cookie).
 
-| Variable | AdminPanel | IELTS | Notes |
-|----------|------------|-------|--------|
-| `SESSION_SECRET` | same | same | ≥16 chars |
-| `SESSION_COOKIE_DOMAIN` | `.wewin.edu.vn` | `.wewin.edu.vn` | omit on localhost |
-| `IELTS_LOGIN_URL` | `https://ielts.wewin.edu.vn/login` | — | IdP entry |
-| `NEXT_PUBLIC_ADMIN_ORIGIN` | `https://admin.wewin.edu.vn` | — | builds `return_to` |
-| `WEWIN_HUB_ALLOWED_RETURN_ORIGINS` | — | include admin origin or `.wewin.edu.vn` | blocks open redirects |
+### Product-side env
 
-## Localhost
+| App | Extra vars |
+|-----|------------|
+| Exam | `HUB_SSO_ADMIN_USERNAME` — admin username in practice DB if token username differs |
+| TOEIC | `HUB_SSO_ADMIN_EMAIL` — fallback ADMIN email in TOEIC DB; needs `AUTH_SECRET` |
+| DailyTalk | `HUB_SSO_ADMIN_EMAIL` — fallback ADMIN email |
+| All | `WEWIN_HUB_API_KEY` identical to Admin Panel; CSP `frame-ancestors` includes `admin.wewin.edu.vn` |
 
-- Ports do **not** isolate cookies: `localhost:3001` and `localhost:3000` share host-only `wewin_session`.
-- Set the same `SESSION_SECRET` on both apps.
-- `IELTS_LOGIN_URL=http://localhost:3001/login`
-- Do **not** set `SESSION_COOKIE_DOMAIN` locally.
+### Cambridge cross-site note
 
-## Adding another product site
+Cambridge is on `*.vercel.app` (cross-site vs Admin Panel). Embed SSO sets
+`SameSite=None; Secure; Partitioned` when `embed=1`. Prefer adding
+`cambridge.wewin.edu.vn` later so same-site Lax works without CHIPS.
 
-1. Copy `decodeSession` / cookie name / secret (or import a tiny shared package later).
-2. On unauthenticated admin routes → redirect to `IELTS_LOGIN_URL?return_to=<this-app-url>`.
-3. Ensure IELTS allowlists that origin.
-4. Prefer verifying cookie only — do **not** sync password hashes between DBs.
+Attempt deep-link SSO remains `/api/cambridge-sso?attempt=…` → Cambridge
+`/api/hub/sso-consume` (Lax cookie, top-level).
 
-## Cambridge note
+## Production checklist
 
-Cambridge still uses a separate `wewin_admin` cookie + short-lived handoff (`/api/admin/hub/cambridge-sso`) for «Xem bài». Full Domain SSO for Cambridge is a follow-up (align cookie name + secret).
+1. Admin Panel: `SESSION_COOKIE_DOMAIN=.wewin.edu.vn`, `WEWIN_HUB_API_KEY`, product `*_PUBLIC_SITE_URL`
+2. Each product: same `WEWIN_HUB_API_KEY`, deploy consume route + `frame-ancestors`
+3. Exam/TOEIC/DailyTalk: map Admin Panel user → local ADMIN (`HUB_SSO_ADMIN_*`)
+4. Redeploy Admin Panel + every product after shipping consume endpoints
 
 ## Logout
 
-Clear **host-only** and **Domain** variants of `wewin_session` on every app logout (already done in IELTS `destroySession` and AdminPanel `clearSessionCookies`).
+Clear **host-only** and **Domain** variants of `wewin_session` on Admin Panel logout
+(`clearSessionCookies`). Product apps clear their own cookies on their logout.

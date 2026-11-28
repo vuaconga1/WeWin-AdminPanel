@@ -4,6 +4,7 @@ out
 .env
 .env.local
 .env.*.local
+.sale-sync-secrets.local
 *.pem
 npm-debug.log*
 .DS_Store

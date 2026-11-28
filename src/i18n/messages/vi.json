@@ -24,5 +24,7 @@
   "statsTotal": "Tổng lượt thi",
   "statsNtl": "Lượt thi NTL",
   "statsXvnt": "Lượt thi XVNT",
-  "loading": "Đang tải…"
+  "loading": "Đang tải…",
+  "tabHistory": "Lịch sử bài làm",
+  "tabMainSite": "Trang chính"
 }

@@ -1,6 +1,6 @@
 /**
  * Verify wewin_session (HMAC-SHA256).
- * Cookie may be issued by IELTS IdP or AdminPanel local login — same secret.
+ * Issued by AdminPanel login; sibling apps verify with the same SESSION_SECRET.
  */
 
 import { createHmac, timingSafeEqual } from "node:crypto";

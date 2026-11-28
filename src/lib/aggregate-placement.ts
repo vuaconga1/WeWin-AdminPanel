@@ -65,9 +65,11 @@ function ieltsHubUrl(): string {
   );
 }
 
-function cambridgeHubUrl(): string | null {
-  const url = process.env.CAMBRIDGE_HUB_URL?.trim();
-  return url || null;
+function cambridgeHubUrl(): string {
+  return (
+    process.env.CAMBRIDGE_HUB_URL?.trim() ||
+    "https://cambridge-placement-test.vercel.app/api/hub/placement-attempts"
+  );
 }
 
 /** Browser origin for «Xem bài» (must match cookie host — prefer localhost over 127.0.0.1). */
@@ -343,48 +345,36 @@ export async function aggregatePlacement(
 
   if (loadCambridge) {
     const cambridgeUrl = cambridgeHubUrl();
-    if (!cambridgeUrl) {
+    const remote = await fetchRemoteHub(
+      "cambridge",
+      cambridgeUrl,
+      cambridgePublicOrigin(cambridgeUrl),
+      query,
+      { sessionToken },
+    );
+    if (remote.status.ok) {
+      sources.cambridge = { ok: true };
+      items.push(...remote.items);
+    } else if (isLocalHubHost(cambridgeUrl)) {
+      // Dev-only: never mask a remote production hub with AdminPanel seed rows.
       try {
         const local = await listLocalPlacement(query, "cambridge");
-        sources.cambridge = { ok: true };
+        sources.cambridge = {
+          ok: true,
+          error: `${remote.status.error || "REMOTE_FAILED"};LOCAL_FALLBACK`,
+        };
         items.push(...local);
       } catch {
-        sources.cambridge = {
-          ok: false,
-          error: "CAMBRIDGE_HUB_NOT_CONFIGURED",
-        };
-      }
-    } else {
-      const remote = await fetchRemoteHub(
-        "cambridge",
-        cambridgeUrl,
-        cambridgePublicOrigin(cambridgeUrl),
-        query,
-        { sessionToken },
-      );
-      if (remote.status.ok) {
-        sources.cambridge = { ok: true };
-        items.push(...remote.items);
-      } else if (isLocalHubHost(cambridgeUrl)) {
-        try {
-          const local = await listLocalPlacement(query, "cambridge");
-          sources.cambridge = {
-            ok: true,
-            error: `${remote.status.error || "REMOTE_FAILED"};LOCAL_FALLBACK`,
-          };
-          items.push(...local);
-        } catch {
-          sources.cambridge = {
-            ok: false,
-            error: remote.status.error || "CAMBRIDGE_HUB_FAILED",
-          };
-        }
-      } else {
         sources.cambridge = {
           ok: false,
           error: remote.status.error || "CAMBRIDGE_HUB_FAILED",
         };
       }
+    } else {
+      sources.cambridge = {
+        ok: false,
+        error: remote.status.error || "CAMBRIDGE_HUB_FAILED",
+      };
     }
   } else {
     sources.cambridge = { ok: true };

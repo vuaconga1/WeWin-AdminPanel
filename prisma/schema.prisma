@@ -82,3 +82,12 @@ model FastbotsConversation {
   @@index([updatedAt])
   @@index([contactEmail])
 }
+
+/// Latest Sale Pipeline snapshot pushed by Apps Script (NTL / XVNT).
+model WeWinSaleSnapshot {
+  branch  String   @id
+  readAt  DateTime @map("read_at")
+  payload Json
+
+  @@map("wewin_sale_snapshot")
+}

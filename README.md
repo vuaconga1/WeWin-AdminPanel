@@ -5,7 +5,7 @@ Standalone hub at **`admin.wewin.edu.vn`** (own repo / deploy).
 ## What it is
 
 - **Own backend**: Next.js API routes + Prisma + **PostgreSQL** (not shared with IELTS).
-- **SSO (Phase 1)**: IELTS IdP issues shared `wewin_session`; same `SESSION_SECRET` (+ `SESSION_COOKIE_DOMAIN=.wewin.edu.vn` in prod). See [docs/SSO.md](docs/SSO.md).
+- **SSO**: Admin Panel login issues `wewin_session`; product «Trang chính» iframe uses embed SSO handoff (`/api/sso/embed` → product `/api/hub/embed-sso-consume`). See [docs/SSO.md](docs/SSO.md).
 - **Local admin fallback**: `AdminUser` in Postgres when `IELTS_LOGIN_URL` is unset.
 - **Placement list**: BFF → IELTS/Cambridge hub APIs (Bearer), with local DB fallback.
 - **Product deep-links**: optional links to each product’s native `/admin` UI.

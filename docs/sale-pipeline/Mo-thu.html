@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WeWIN · Sale Pipeline</title>
+<style>
+*{box-sizing:border-box}body{margin:0;color:#18243b;background:linear-gradient(150deg,#eef2fa,#f3f5f8 55%,#eff3fa);font:15px/1.48 'Be Vietnam Pro',Segoe UI,Arial,sans-serif;font-variant-numeric:tabular-nums}main{max-width:1180px;margin:auto;padding:22px}header{background:linear-gradient(115deg,#0d1b3e,#1a2e55);color:white;border-radius:16px;padding:24px 28px}header small{color:#e8d48b;font-weight:700;letter-spacing:.16em}h1{margin:4px 0;font-size:clamp(26px,3vw,36px);line-height:1.2}header p{margin:6px 0 0;color:#e5e9f2}
+.nav,.choices{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}
+.nav button,.choices button,.branchlink{cursor:pointer;border-radius:9px;padding:9px 16px;background:white;color:#26354d;border:1px solid #d5dce7;font:inherit;font-weight:600;min-height:44px}
+button[aria-pressed=true]{background:#0d1b3e;color:white;border-color:#0d1b3e}
+button:focus-visible{outline:3px solid #2d74da;outline-offset:2px}
+.branchlink{color:#0d4078;background:#eef4fb;border:0}
+.metrics,.grid{display:grid;gap:14px;margin:14px 0}
+.metrics{grid-template-columns:2fr 1fr 1fr}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.metrics article,.panel{background:white;border:1px solid #e0e4ea;border-radius:14px;box-shadow:0 2px 6px #12234809;padding:20px;min-width:0}
+.metrics span,.panel p,dt{color:#536176}
+.metrics strong{display:block;font-size:clamp(20px,2.6vw,32px);line-height:1.3;letter-spacing:-.035em}
+.panel{margin:14px 0}
+.grid>.panel{margin:0}h2{margin:0;color:#0d1b3e;font-size:19px}
+.panel p{margin:4px 0 14px}
+.scroll{overflow-x:auto}table{border-collapse:collapse;width:100%;text-align:left}td,th{white-space:nowrap;padding:11px 12px;border-bottom:1px solid #e6eaf0}th{font-size:12px;color:#526074;background:#f5f7fa}
+.bars{margin:12px 0}
+.bar{margin:12px 0}
+.bar>div:first-child{display:flex;align-items:baseline;justify-content:space-between;gap:15px}
+.track{background:#eef2f7;height:8px;border-radius:6px;margin-top:5px}
+.track i{display:block;height:100%;border-radius:6px}dd{margin:0 0 15px;font-size:25px;font-weight:700}
+.empty{padding:24px 4px}
+button:active{background-color:#e6f0ff;color:#0d1b3e}[hidden]{display:none!important}@media(max-width:640px){main{padding:12px}
+.grid{grid-template-columns:1fr}
+.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.metrics article:first-child{grid-column:1/-1}
+.metrics article,.panel{padding:14px}header{padding:18px}
+.nav button,.choices button{padding:8px 12px}}
+.plot svg{display:block;width:100%;height:auto;max-height:210px;font:14px 'Segoe UI',sans-serif;fill:#35465b}
+.plot svg .axis{font-size:13px;fill:#546579}
+.plot svg .value{font-weight:700}
+.plot svg .halo{paint-order:stroke;stroke:#fff;stroke-width:4px}
+.plot svg .ringnum{font-size:32px;font-weight:700;fill:#0d1b3e}
+.legend{display:flex;gap:12px;flex-wrap:wrap;color:#40516a;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px}
+.ringwrap{display:flex;gap:16px;align-items:center;justify-content:center;min-height:186px}
+.ringwrap svg{max-width:48%;width:172px}
+.ringwrap strong{display:block;font-size:22px;margin-bottom:10px}
+.ringwrap small{font-size:14px;color:#536176}
+.panel .foot{font-size:13px;margin:10px 0 0}
+.plot>svg{margin:0 auto}
+.plot .axis{font-variant-numeric:tabular-nums}
+.topline,.tabletools,.pages{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.nav{margin:12px 0}
+.action,input{min-height:44px;border:1px solid #cbd5e1;border-radius:9px;background:white;padding:8px 14px;color:#173462;font:inherit}
+button{cursor:pointer}button:disabled{cursor:default;opacity:.6}.tabletools,.pages{margin:12px 0}
+.note{background:#fff7df;color:#604618;padding:10px 14px;border-radius:8px}
+.staffplot svg{width:100%;display:block}.staffplot .value{font-weight:700}.tabular{font-variant-numeric:tabular-nums}
+input{max-width:100%}.muted{color:#546579;font-size:13px}.barheading{font-size:14px;font-weight:600}
+.key{display:flex;flex-wrap:wrap;gap:12px;font-size:13px}.key i{display:inline-block;width:11px;height:11px;margin-right:5px;border-radius:3px}
+@media(max-width:640px){.staffplot svg{min-width:300px}.staffplot{overflow-x:auto}.topline{gap:2px}.action{min-height:44px}.plot .axis{font-size:14px}}
+</style></head>
+<body>
+<main>
+<header><small>WEWIN EDUCATION</small><h1>Sale Pipeline</h1><p>Bản xem thử · Toàn bộ số liệu và tên trong bản này là giả lập</p></header>
+<div class="topline"><nav class="nav" aria-label="Phạm vi báo cáo">
+<button data-view="Tổng quan" aria-pressed="true">Tổng quan</button>
+<button data-view="NTL" aria-pressed="false">NTL</button>
+<button data-view="XVNT" aria-pressed="false">XVNT</button>
+</nav><button class="action" id="refresh">Làm mới</button></div>
+<div id="status" class="muted" aria-live="polite"></div><div id="content"></div>
+</main>
+<script>
+'use strict';
+const BRANCHES = ['NTL','XVNT'];
+const palette = ['#24559a','#087a74','#95500f','#7850a9','#ad4658','#217591','#58652b'];
+const assigned = {};
+const fmt = n => Number(n).toLocaleString('vi-VN');
+const money = n => fmt(n) + ' ₫';
+const esc = v => String(v ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normalize = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/đ/g,'d');
+const holder = document.getElementById('content');
+let view = 'Tổng quan', revision = 0, activeGroup = 0, filter = '', page = 0;
+let loaded = [], currentDetail = null;
+const panel = (title,sub,body) => '<article class="panel"><h2>'+esc(title)+'</h2>'+(sub?'<p>'+esc(sub)+'</p>':'')+body+'</article>';
+const note = s => '<p class="note">'+esc(s)+'</p>';
+const svg = (w,h,label,body) => '<svg role="img" aria-label="'+esc(label)+'" viewBox="0 0 '+w+' '+h+'">'+body+'</svg>';
+const tx = (x,y,label,anchor='middle',attrs='') => '<text x="'+x+'" y="'+y+'" text-anchor="'+anchor+'" '+attrs+'>'+esc(label)+'</text>';
+const key = (name,color) => '<span><i style="background:'+color+'"></i>'+esc(name)+'</span>';
+function colorFor(name) {
+  if(name==='Chưa phân công') return '#69788c';
+  const id = name.trim().toLocaleLowerCase('vi').normalize('NFC');
+  let hash = 0;
+  for(const c of id) hash = (hash * 31 + c.charCodeAt(0)) >>> 0;
+  return palette[assigned[id] ?? (hash % palette.length)];
+}
+function sortRows(items){
+  return items.slice().sort((a,b)=>Number(a[0]==='Chưa phân công')-Number(b[0]==='Chưa phân công') || b[1]-a[1] || a[0].localeCompare(b[0],'vi'));
+}
+function staffPlot(data) {
+  const items = sortRows(data.staff);
+  if(!items.length) return note('Chưa có lead trong danh sách hiện tại.');
+  const left=116, right=370, top=25, step=39, height=top+step*items.length+28;
+  const max=Math.max(...items.map(r=>r[1]));
+  const unit=Math.pow(10,Math.floor(Math.log10(max/4)));
+  const tick=Math.max(1,([1,2,5,10].find(n=>n*unit>=max/4)||10)*unit);
+  const ticks=Math.ceil(max/tick), end=ticks*tick;
+  let marks='';
+  for(let i=0;i<=ticks;i++){
+    const x=left+(right-left)*i/ticks;
+    marks+='<path d="M'+x+' 12V'+(height-25)+'" stroke="#dbe3ec" stroke-dasharray="3 4"/>'+tx(x,height-6,fmt(i*tick),'middle','fill="#516072" font-size="12"');
+  }
+  for(const [i,[name,n]] of items.entries()){
+    const y=top+i*step,w=(right-left)*n/end;
+    marks+=tx(left-8,y+8,name,'end','fill="#24364a" font-size="13"')+'<rect x="'+left+'" y="'+(y-7)+'" rx="4" width="'+w+'" height="21" fill="'+colorFor(name)+'"/>'+tx(left+w+6,y+8,fmt(n),'start','class="value" fill="#192a42" font-size="14"');
+  }
+  return '<div class="staffplot">'+svg(414,height,items.map(x=>x.join(' ')).join(', '),marks)+'</div>';
+}
+function stats(d) {
+  return '<div class="metrics">'+[['Tổng thu',d?money(d.revenue):'—'],['Lượt đăng ký',d?fmt(d.registered):'—'],['Tái đăng ký',d?fmt(d.renewed):'—']].map(([l,n])=>'<article><span>'+l+'</span><strong>'+n+'</strong></article>').join('')+'</div>';
+}
+function columns(ds) {
+  const max=Math.max(1,...ds.flatMap(d=>[d.totalLead,d.mkt])), end=Math.max(4,Math.ceil(max/4)*4);
+  let marks='';
+  for(let i=0;i<=4;i++){ const y=162-32*i;marks+='<path d="M39 '+y+'h351" stroke="#dde5ee"/>'+tx(34,y+4,fmt(end*i/4),'end','font-size="12"'); }
+  ds.forEach((d,i)=>{const cx=ds.length===1?215:125+170*i;
+    [d.totalLead,d.mkt].forEach((n,j)=>{const h=128*n/end,x=cx-36+36*j;
+      marks+='<rect x="'+x+'" y="'+(162-h)+'" width="29" height="'+h+'" rx="4" fill="'+['#244878','#bc8d2d'][j]+'"/>'+tx(x+14,155-h,fmt(n),'middle','font-weight="700"');});
+    marks+=tx(cx,184,d.branch);
+  });
+  return '<div class="plot">'+svg(404,196,'Số lead theo cơ sở. '+ds.map(d=>d.branch+' tổng '+d.totalLead+', MKT '+d.mkt).join('. '),marks)+'</div><div class="key">'+key('Tổng lead trên Sheet','#244878')+key('Lead MKT hiện tại','#bc8d2d')+'</div>';
+}
+function donut(d){
+  if(!d || !d.registered || d.renewed>d.registered) return note('Chưa đủ dữ liệu để vẽ cơ cấu.');
+  const pct=100*d.renewed/d.registered;
+  const slice=(label,n,c)=>'<div class="key">'+key(label,c)+'</div><strong>'+fmt(n)+' <small>· '+fmt(Math.round(n/d.registered*1000)/10)+'%</small></strong>';
+  const ring='<circle cx="85" cy="85" r="63" stroke="#9bc5e5" stroke-width="22" fill="none"/><circle cx="85" cy="85" r="63" stroke="#173462" stroke-width="22" fill="none" transform="rotate(-90 85 85)" pathLength="100" stroke-dasharray="'+pct+' '+(100-pct)+'"/>'+tx(85,89,fmt(d.registered),'middle','class="ringnum"')+tx(85,109,'lượt đăng ký');
+  return '<div class="plot ringwrap">'+svg(170,170,'Tỷ trọng tái đăng ký '+fmt(Math.round(pct))+'%',ring)+'<div>'+slice('Tái đăng ký',d.renewed,'#173462')+slice('Nguồn khác',d.registered-d.renewed,'#9bc5e5')+'</div></div>';
+}
+function trend(ds){
+  const reference=ds.map(d=>d.today).sort().at(-1);
+  const series=ds.filter(d=>d.today.slice(0,7)===reference.slice(0,7)&&d.dated>0);
+  if(!series.length)return note('Chưa có ngày kết thúc deal xác định.');
+  const count=Math.ceil(Number(reference.slice(-2))/7), max=Math.max(2,...series.flatMap(d=>d.weeks));
+  const upper=Math.ceil(max/2)*2;
+  const x=i=>count===1?222:46+i*356/(count-1),y=v=>135-95*v/upper;
+  let marks='';
+  for(const n of [0,upper/2,upper])marks+='<path d="M35 '+y(n)+'h378" stroke="#dce5ed"/>'+tx(29,y(n)+4,n,'end','font-size="12"');
+  for(let i=0;i<count;i++)marks+=tx(x(i),157,(i*7+1)+'–'+Math.min(i*7+7,Number(reference.slice(-2))),'middle','font-size="12"');
+  for(const d of series){
+    const c=d.branch==='NTL'?'#24559a':'#087a74';
+    const points=d.weeks.map((v,i)=>x(i)+','+y(v)).join(' ');
+    marks+='<polyline points="'+points+'" stroke="'+c+'" fill="none" stroke-width="3" '+(d.branch==='XVNT'?'stroke-dasharray="6 3"':'')+'/>';
+    d.weeks.forEach((v,i)=>{marks+='<circle cx="'+x(i)+'" cy="'+y(v)+'" r="4" fill="'+c+'"/>'+tx(x(i),y(v)+(d.branch==='NTL'?-9:15),v,'middle','class="halo" fill="'+c+'"');});
+  }
+  return '<div class="plot">'+svg(442,171,'Lượt kết thúc deal theo tuần. '+series.map(d=>d.branch+': '+d.weeks.join(', ')).join('. '),marks)+'</div><div class="key">'+series.map(d=>key(d.branch+(d.branch==='NTL'?' · liền':' · đứt'),d.branch==='NTL'?'#24559a':'#087a74')).join('')+'</div><small class="muted">'+esc(reference.slice(0,7))+' · '+ds.map(d=>esc(d.branch)+' có '+d.missingDate+' dòng thiếu ngày kết thúc xác định').join('. ')+'</small>';
+}
+function overview(ds){
+  const sum=ds.length===2?ds.reduce((s,d)=>({revenue:s.revenue+d.revenue,registered:s.registered+d.registered,renewed:s.renewed+d.renewed}),{revenue:0,registered:0,renewed:0}):null;
+  if(!ds.length)return stats(null)+note('Chưa có dữ liệu hai cơ sở. Chọn Làm mới để thử lại.');
+  const rows=ds.map(d=>'<tr><td><button class="branchlink" data-jump="'+esc(d.branch)+'">'+esc(d.branch)+' ↗</button></td><td>'+money(d.revenue)+'</td><td>'+fmt(d.registered)+'</td><td>'+fmt(d.renewed)+'</td></tr>').join('');
+  return stats(sum)+(sum?'':note('Chưa đủ hai cơ sở để tính tổng.'))+'<div class="grid">'+panel('Lead theo cơ sở','Tổng lead và lead MKT trong danh sách hiện tại',columns(ds))+panel('Cơ cấu lượt đăng ký','Theo nguồn đăng ký trong SALE',donut(sum))+'</div>'+panel('Lượt theo ngày kết thúc deal','Theo tuần trong tháng hiện tại · UTC+7',trend(ds))+panel('Sale theo cơ sở','',table(['Cơ sở','Tổng thu','Đăng ký','Tái đăng ký'],rows));
+}
+function table(headers,rows){return '<div class="scroll"><table><thead><tr>'+headers.map(t=>'<th scope="col">'+esc(t)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>';}
+const groupTitles=['Nhân viên','Nguồn','Lớp','Thanh toán'];
+function groups(d){
+  const buttons=groupTitles.map((l,i)=>'<button data-choice="'+i+'" aria-pressed="'+(activeGroup===i)+'">'+l+'</button>').join('');
+  const pairs=sortRows(d.groups[activeGroup]);
+  const max=Math.max(1,...pairs.map(r=>Math.abs(r[1])));
+  const mix=new Map((d.staffMix||[]).map(([n,a,b])=>[n,[a,b]]));
+  const list=pairs.map(([label,n],i)=>{const c=activeGroup===0?colorFor(label):palette[i%palette.length];
+    const sub=activeGroup===0&&mix.has(label)?'<small class="muted">Nguồn khác '+money(mix.get(label)[0])+' · Tái đăng ký '+money(mix.get(label)[1])+'</small>':'';
+    return '<div class="bar"><div><span>'+esc(label)+'</span><b>'+money(n)+'</b></div><div class="track"><i style="background:'+c+';width:'+Math.abs(n)/max*100+'%"></i></div>'+sub+'</div>';});
+  const emptyClass=activeGroup===2&&pairs.length===1&&pairs[0][0]==='Chưa có lớp';
+  const chart=emptyClass?note('Chưa có dữ liệu lớp.'):(!list.length?note('Chưa có dữ liệu doanh thu.'):list.slice(0,6).join('')+(list.length>6?'<details><summary>Xem tất cả '+list.length+' nhóm</summary>'+list.slice(6).join('')+'</details>':''));
+  const diff=d.revenue-pairs.reduce((s,r)=>s+r[1],0);
+  return '<div class="choices">'+buttons+'</div>'+chart+(Math.abs(diff)>0.01?note('Chênh với tổng thu trên Sheet: '+money(diff)+'.'):'');
+}
+function detail(d){
+  return stats(d)+'<div class="grid">'+panel('Lead của '+d.branch,'','<dl><dt>Tổng lead trên Sheet</dt><dd>'+fmt(d.totalLead)+'</dd><dt>Lead MKT hiện tại</dt><dd>'+fmt(d.mkt)+'</dd></dl>')+panel('Lead hiện tại theo nhân viên',fmt(d.current)+' lead trong danh sách hiện tại',staffPlot(d))+'</div><div class="grid">'+panel('Cơ cấu lượt đăng ký','',donut(d))+panel('Lượt theo ngày kết thúc deal','Theo tuần trong tháng hiện tại',trend([d]))+'</div>'+panel('Doanh thu theo nhóm','','<div id="groups">'+groups(d)+'</div>')+panel('Danh sách đăng ký','','<div class="tabletools"><label>Tìm học viên <input id="query" type="search" placeholder="Nhập tên học viên"></label></div><div id="records"></div>');
+}
+function drawRows(){
+  const all=currentDetail.students.filter(r=>normalize(r[0]).includes(normalize(filter)));
+  const pages=Math.max(1,Math.ceil(all.length/20));
+  page=Math.min(pages-1,Math.max(page,0));
+  const rows=all.slice(page*20,page*20+20).map(r=>'<tr>'+r.map((v,i)=>'<td>'+esc(i===2&&v!==null?money(v):(v??'')===''?'—':v)+'</td>').join('')+'</tr>').join('');
+  document.getElementById('records').innerHTML=(rows?table(['Học viên','Nhân viên','Học phí','Nguồn','Lớp','Trạng thái'],rows):note('Không có lượt đăng ký phù hợp.'))+'<div class="pages"><button class="action" data-step="-1" '+(!page?'disabled':'')+'>Trước</button><span>'+fmt(all.length)+' lượt · Trang '+(page+1)+'/'+pages+'</span><button class="action" data-step="1" '+(page>=pages-1?'disabled':'')+'>Sau</button></div>';
+}
+const demo = [{"branch": "NTL", "registered": 3, "renewed": 1, "revenue": 3000000, "totalLead": 12, "current": 8, "mkt": 3, "staff": [["Tư vấn A", 5], ["Tư vấn B", 2], ["Chưa phân công", 1]], "groups": [[["Tư vấn A", 2000000], ["Tư vấn B", 1000000]], [["Giới thiệu", 2000000], ["RE-ENROLL", 1000000]], [["Lớp mẫu", 3000000]], [["Chuyển khoản", 3000000]]], "staffMix": [["Tư vấn A", 1000000, 1000000], ["Tư vấn B", 1000000, 0]], "today": "2026-11-28", "readAt": "2026-11-28T03:00:00Z", "weeks": [0, 1, 2, 0], "missingDate": 0, "dated": 3, "students": [["Học viên mẫu 1", "Tư vấn A", 1000000, "RE-ENROLL", "Lớp mẫu", "DONE"], ["Học viên mẫu 2", "Tư vấn B", 1000000, "Giới thiệu", "Lớp mẫu", "DONE"], ["Học viên mẫu 3", "Tư vấn A", 1000000, "Giới thiệu", "Lớp mẫu", "DONE"]]}, {"branch": "XVNT", "registered": 3, "renewed": 1, "revenue": 6000000, "totalLead": 24, "current": 16, "mkt": 6, "staff": [["Tư vấn A", 10], ["Tư vấn B", 4], ["Chưa phân công", 2]], "groups": [[["Tư vấn A", 4000000], ["Tư vấn B", 2000000]], [["Giới thiệu", 4000000], ["RE-ENROLL", 2000000]], [["Lớp mẫu", 6000000]], [["Chuyển khoản", 6000000]]], "staffMix": [["Tư vấn A", 2000000, 2000000], ["Tư vấn B", 2000000, 0]], "today": "2026-11-28", "readAt": "2026-11-28T03:00:00Z", "weeks": [0, 1, 2, 0], "missingDate": 0, "dated": 3, "students": [["Học viên mẫu 1", "Tư vấn A", 2000000, "RE-ENROLL", "Lớp mẫu", "DONE"], ["Học viên mẫu 2", "Tư vấn B", 2000000, "Giới thiệu", "Lớp mẫu", "DONE"], ["Học viên mẫu 3", "Tư vấn A", 2000000, "Giới thiệu", "Lớp mẫu", "DONE"]]}];
+function read(branch){return Promise.resolve(demo.find(d=>d.branch===branch));}
+async function select(next){
+  const id=++revision;
+  view=next; page=0; filter=''; activeGroup=0; currentDetail=null;
+  document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));
+  const branches=next==='Tổng quan'?BRANCHES:[next], mode=next==='Tổng quan'?'summary':'detail';
+  document.getElementById('status').textContent='Đang đọc dữ liệu…';
+  holder.innerHTML='<article class="panel" aria-busy="true">Đang tải '+esc(next)+'…</article>';
+  const results=await Promise.allSettled(branches.map(b=>read(b,mode)));
+  if(id!==revision) return;
+  loaded=results.filter(r=>r.status==='fulfilled').map(r=>r.value);
+  const errs=results.flatMap((r,i)=>r.status==='rejected'?[branches[i]+': '+String(r.reason?.message||r.reason||'Lỗi kết nối')]:[]);
+  document.getElementById('status').textContent=loaded.map(d=>d.branch+' · '+new Date(d.readAt).toLocaleTimeString('vi-VN',{timeZone:'Asia/Bangkok'})+' (UTC+7)').join('   ');
+  currentDetail=mode==='detail'?loaded[0]:null;
+  holder.innerHTML=errs.map(note).join('')+(view==='Tổng quan'?overview(loaded):currentDetail?detail(currentDetail):'');
+  if(currentDetail)drawRows();
+}
+document.addEventListener('input',e=>{if(e.target.id==='query'){filter=e.target.value;page=0;drawRows();}});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.view||b.dataset.jump||b.id==='refresh')select(b.dataset.view||b.dataset.jump||view);
+  else if(b.dataset.choice!==undefined&&currentDetail){activeGroup=Number(b.dataset.choice);document.getElementById('groups').innerHTML=groups(currentDetail);document.querySelector('[data-choice="'+activeGroup+'"]').focus();}
+  else if(b.dataset.step&&currentDetail){page+=Number(b.dataset.step);drawRows();}
+});
+select('Tổng quan');
+</script></body></html>

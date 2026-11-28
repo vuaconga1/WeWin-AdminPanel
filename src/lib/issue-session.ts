@@ -47,8 +47,8 @@ function expireSessionCookie(
 }
 
 /**
- * Issue wewin_session — same shape as IELTS createSession so product sites
- * that share SESSION_SECRET (+ Domain) accept this cookie.
+ * Issue wewin_session so product sites that share SESSION_SECRET
+ * (+ SESSION_COOKIE_DOMAIN in prod) accept this cookie without re-login.
  */
 export async function issueLocalSession(user: SessionUser): Promise<void> {
   const jar = await cookies();

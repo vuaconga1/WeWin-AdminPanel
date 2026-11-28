@@ -2,9 +2,14 @@ import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
 import { ExamPanel } from "@/components/exam-panel";
 import { PlacementPanel } from "@/components/placement-panel";
+import { ProductWorkspace } from "@/components/product-workspace";
 import { ToeicPanel } from "@/components/toeic-panel";
 import { VstepPanel } from "@/components/vstep-panel";
-import { getProduct, listProducts } from "@/lib/products";
+import {
+  getProduct,
+  getProductPublicSiteUrl,
+  listProducts,
+} from "@/lib/products";
 import { requireAdminPage } from "@/lib/require-admin-page";
 
 export const dynamic = "force-dynamic";
@@ -20,41 +25,40 @@ export default async function ProductAdminPage({ params }: Props) {
 
   const user = await requireAdminPage(product.href);
   const products = listProducts();
+  const publicSiteUrl = getProductPublicSiteUrl(product.id);
 
+  let history: React.ReactNode;
   if (product.id === "exam") {
-    return (
-      <AdminShell user={user} products={products} active={product.id}>
-        <ExamPanel title="Lịch sử luyện thi · Exam" lead={product.descriptionVi} />
-      </AdminShell>
+    history = (
+      <ExamPanel title="Lịch sử luyện thi · Exam" lead={product.descriptionVi} />
+    );
+  } else if (product.id === "toeic") {
+    history = (
+      <ToeicPanel title="Lịch sử làm bài · TOEIC" lead={product.descriptionVi} />
+    );
+  } else if (product.id === "vstep") {
+    history = (
+      <VstepPanel title="Lịch sử làm bài · VSTEP" lead={product.descriptionVi} />
+    );
+  } else {
+    history = (
+      <PlacementPanel
+        source={product.id}
+        title={`Kết quả Placement · ${product.nameVi}`}
+        lead={product.descriptionVi}
+      />
     );
   }
-
-  if (product.id === "toeic") {
-    return (
-      <AdminShell user={user} products={products} active={product.id}>
-        <ToeicPanel title="Lịch sử làm bài · TOEIC" lead={product.descriptionVi} />
-      </AdminShell>
-    );
-  }
-
-  if (product.id === "vstep") {
-    return (
-      <AdminShell user={user} products={products} active={product.id}>
-        <VstepPanel title="Lịch sử làm bài · VSTEP" lead={product.descriptionVi} />
-      </AdminShell>
-    );
-  }
-
-  const titleVi = `Kết quả Placement · ${product.nameVi}`;
-  const leadVi = product.descriptionVi;
 
   return (
     <AdminShell user={user} products={products} active={product.id}>
-      <PlacementPanel
-        source={product.id}
-        title={titleVi}
-        lead={leadVi}
-      />
+      <ProductWorkspace
+        productId={product.id}
+        productName={product.nameVi}
+        publicSiteUrl={publicSiteUrl}
+      >
+        {history}
+      </ProductWorkspace>
     </AdminShell>
   );
 }
