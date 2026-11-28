@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { AdminShell } from "@/components/admin-shell";
+import { DailyTalkPanel } from "@/components/dailytalk-panel";
 import { ExamPanel } from "@/components/exam-panel";
 import { PlacementPanel } from "@/components/placement-panel";
 import { ProductWorkspace } from "@/components/product-workspace";
@@ -26,6 +27,19 @@ export default async function ProductAdminPage({ params }: Props) {
   const user = await requireAdminPage(product.href);
   const products = listProducts();
   const publicSiteUrl = getProductPublicSiteUrl(product.id);
+
+  /** DailyTalk admin console is native (hub API), not Placement + iframe. */
+  if (product.id === "dailytalk") {
+    return (
+      <AdminShell user={user} products={products} active={product.id}>
+        <DailyTalkPanel
+          title="DailyTalk · Quản trị"
+          lead={product.descriptionVi}
+          publicSiteUrl={publicSiteUrl}
+        />
+      </AdminShell>
+    );
+  }
 
   let history: React.ReactNode;
   if (product.id === "exam") {

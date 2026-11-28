@@ -132,8 +132,8 @@ export function listProducts(): ProductLink[] {
       id: "dailytalk",
       nameVi: "DailyTalk",
       nameEn: "DailyTalk",
-      descriptionVi: "Placement DailyTalk trong AdminPanel",
-      descriptionEn: "DailyTalk placement in AdminPanel",
+      descriptionVi: "Tổng quan, học viên, nhân sự và nhật ký từ dailytalk.wewin.edu.vn",
+      descriptionEn: "Overview, learners, staff and activity from dailytalk.wewin.edu.vn",
       href: "/p/dailytalk",
     },
     {
